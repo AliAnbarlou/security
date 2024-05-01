@@ -1,37 +1,36 @@
-import pywifi
-import time
+import subprocess
+import requests
 
-def connect_to_wifi(ssid, password):
-    while True:
-        try:
-            wifi = pywifi.PyWiFi()
-            iface = wifi.interfaces()[0]  # انتخاب رابط شبکه Wi-Fi
 
-            iface.disconnect()  # قطع اتصال از هر شبکه‌ای که ممکن است متصل باشید
+def check_internet_connection():
+    try:
+        # Attempt to make a connection to Google's DNS server
+        response = requests.get("http://www.google.com", timeout=5)
+        if response.status_code == 200:
+            return True
+        else:
+            return False
+    except requests.ConnectionError:
+        return False
 
-            time.sleep(1)  # انتظار 1 ثانیه برای قطع اتصال
 
-            profile = pywifi.Profile()  # ساخت یک پروفایل جدید برای شبکه Wi-Fi
-            profile.ssid = ssid  # تنظیم نام شبکه Wi-Fi
-            profile.auth = pywifi.const.AUTH_ALG_OPEN  # تنظیم الگوریتم احراز هویت (مثلاً WPA2)
-            profile.akm.append(pywifi.const.AKM_TYPE_WPA2PSK)  # تنظیم نوع احراز هویت (مثلاً WPA2-PSK)
-            profile.cipher = pywifi.const.CIPHER_TYPE_CCMP  # تنظیم نوع رمزگذاری (مثلاً AES)
+def connect_wifi(ssid, password):
+    try:
+        # Execute nmcli command to connect to WiFi
+        cmd = f"nmcli device wifi connect '{ssid}' password '{password}'"
+        subprocess.run(cmd, shell=True, check=True)
+        return True
+    except subprocess.CalledProcessError as e:
+        print("Error:", e)
+        return False
 
-            profile.key = password  # تنظیم رمز عبور شبکه Wi-Fi
+if __name__ == "__main__":
+    wifi_name = input("Enter your WiFi name (SSID): ")
+    wifi_password = input("Enter your WiFi password: ")
 
-            iface.remove_all_network_profiles()  # حذف همه پروفایل‌های شبکه‌های قبلی
-            tmp_profile = iface.add_network_profile(profile)  # اضافه کردن پروفایل جدید
-
-            iface.connect(tmp_profile)  # اتصال به شبکه Wi-Fi با استفاده از پروفایل جدید
-
-            time.sleep(3)  # wait for connection
-
-            if iface.status() == pywifi.const.IFACE_CONNECTED:  # چک کردن وضعیت اتصال
-                print("Connected to", ssid)
-            else:
-                print("Connection to", ssid, "failed")
-        except Exception as e:
-            print("An error occurred:", e)
-        
-
-connect_to_wifi("Arshia", "12345678")
+    if connect_wifi(wifi_name, wifi_password):
+        if check_internet_connection():
+            print("Connected to WiFi successfully!")
+            print(f"Password is {wifi_password}")
+        else:
+            print("Failed to connect to WiFi.")
