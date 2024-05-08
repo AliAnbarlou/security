@@ -64,7 +64,7 @@ if wifi_name in help_commends:
 elif wifi_name in exit_commends:
     exit()
 else:
-    with open("ss.txt", 'r') as file:
+    with open("Passwords.txt", 'r') as file:
                 lines = file.readlines()
                 for line in lines:
                     print(f"Password testing now : {line.strip()}")
