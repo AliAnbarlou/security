@@ -1,7 +1,10 @@
 import subprocess
+import platform
 import requests
 import time
 import os
+
+oprating_system = platform.system()
 
 def check_internet_connection():
     try:
@@ -15,14 +18,23 @@ def check_internet_connection():
 
 
 def connect_wifi(ssid, password):
-    try:
-        # Execute nmcli command to connect to WiFi
-        cmd = f"nmcli device wifi connect '{ssid}' password '{password}'"
-        subprocess.run(cmd, shell=True, check=True)
-        return True
-    except subprocess.CalledProcessError as e:
-        print("Error:", e)
-        return False
+    if oprating_system=="Linux":
+        try:
+            # Execute nmcli command to connect to WiFi
+            cmd = f"nmcli device wifi connect '{ssid}' password '{password}'"
+            subprocess.run(cmd, shell=True, check=True)
+            return True
+        except subprocess.CalledProcessError as e:
+            print("Error:", e)
+            return False
+    else:
+        try:
+            cmd = f"netsh wlan connect name='{ssid}' ssid='{ssid}' password='{password}'"
+            subprocess.run(cmd, shell=True, check=True)
+            return True
+        except subprocess.CalledProcessError as e:
+            print("Error:", e)
+            return False
 
 help_commends = ["/h","/help"]
 exit_commends = ["/esc","/exit"]
@@ -64,7 +76,7 @@ if wifi_name in help_commends:
 elif wifi_name in exit_commends:
     exit()
 else:
-    with open("Passwords.txt", 'r') as file:
+    with open("password.txt", 'r') as file:
                 lines = file.readlines()
                 for line in lines:
                     print(f"Password testing now : {line.strip()}")
